@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"log"
 	"os"
@@ -18,11 +19,18 @@ func main() {
 	//fmt.Println(bank)
 	//fmt.Println(lanarbank)
 
-	data, err := os.ReadFile("banks.txt")
+	file, err := os.Open("banks.txt")
 	if err != nil {
 		log.Fatal(err)
 	}
-	content := string(data)
-	fmt.Println("Содержимое файла banks.txt:")
-	fmt.Println(content)
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := scanner.Text()
+		fmt.Println(line)
+	}
+	//content := string(data)
+	//fmt.Println("Содержимое файла banks.txt:")
+	//fmt.Println(content)
 }
