@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
+	"strings"
 )
 
 type Bank struct {
@@ -13,11 +15,24 @@ type Bank struct {
 	BinTo   int
 }
 
+func loadBankData(path string) (Bank, error) {
+	parts := strings.Split(path, ",")
+	BinTo, err := strconv.Atoi(parts[1])
+	if err != nil {
+		return Bank{}, err
+	}
+	BinFrom, err := strconv.Atoi(parts[2])
+	if err != nil {
+		return Bank{}, err
+	}
+	return Bank{
+		Name:    parts[0],
+		BinTo:   BinTo,
+		BinFrom: BinFrom,
+	}, nil
+}
+
 func main() {
-	//bank := Bank{}
-	//lanarbank := Bank{Name: "Lunar Bank", BinFrom: 400000, BinTo: 499999}
-	//fmt.Println(bank)
-	//fmt.Println(lanarbank)
 
 	file, err := os.Open("banks.txt")
 	if err != nil {
@@ -25,12 +40,17 @@ func main() {
 	}
 	defer file.Close()
 
+	banks := make([]Bank, 0)
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		line := scanner.Text()
-		fmt.Println(line)
+		bank, err := loadBankData(line)
+		banks = append(banks, bank)
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Println(bank)
 	}
-	//content := string(data)
-	//fmt.Println("Содержимое файла banks.txt:")
-	//fmt.Println(content)
+	fmt.Println("Загружено банков: 5")
+	fmt.Println(banks)
 }
