@@ -3,7 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"log"
+	"log/slog"
 	"os"
 	"strconv"
 	"strings"
@@ -15,42 +15,51 @@ type Bank struct {
 	BinTo   int
 }
 
-func loadBankData(path string) (Bank, error) {
-	parts := strings.Split(path, ",")
-	BinTo, err := strconv.Atoi(parts[1])
+func parseBankLine(line string) (Bank, error) {
+	parts := strings.Split(line, ",")
+	if len(parts) < 3 {
+		return Bank{}, fmt.Errorf("недостаточно полей в строке: %s", line)
+	}
+	binFrom, err := strconv.Atoi(parts[1])
 	if err != nil {
 		return Bank{}, err
 	}
-	BinFrom, err := strconv.Atoi(parts[2])
+	binTo, err := strconv.Atoi(parts[2])
 	if err != nil {
 		return Bank{}, err
 	}
 	return Bank{
 		Name:    parts[0],
-		BinTo:   BinTo,
-		BinFrom: BinFrom,
+		BinFrom: binFrom,
+		BinTo:   binTo,
 	}, nil
 }
 
-func main() {
-
-	file, err := os.Open("banks.txt")
+func loadBankData(path string) ([]Bank, error) {
+	file, err := os.Open(path)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 	defer file.Close()
 
 	banks := make([]Bank, 0)
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
-		line := scanner.Text()
-		bank, err := loadBankData(line)
-		banks = append(banks, bank)
+		bank, err := parseBankLine(scanner.Text())
 		if err != nil {
-			log.Fatal(err)
+			return nil, err
 		}
-		fmt.Println(bank)
+		banks = append(banks, bank)
 	}
-	fmt.Println("Загружено банков: 5")
+	return banks, scanner.Err()
+}
+
+func main() {
+	banks, err := loadBankData("banks.txt")
+	if err != nil {
+		slog.Error("ошибка загрузки банков", "err", err)
+		os.Exit(1)
+	}
+	fmt.Println("Загружено банков:", len(banks))
 	fmt.Println(banks)
 }
